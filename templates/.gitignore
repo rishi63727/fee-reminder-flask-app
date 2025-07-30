@@ -1,0 +1,9 @@
+# Python virtual environment
+venv/
+__pycache__/
+
+# Uploaded files from users
+uploads/
+
+# Database file
+*.db
