@@ -7,3 +7,28 @@ uploads/
 
 # Database file
 *.db
+# Secrets & environment
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Datasets & uploads
+uploads/
+*.csv
+*.xlsx
+
+# Model artifacts
+*.pkl
+
+# Office temp files
+~$*
+
+# Large binaries / prototypes
+*.pptx
+*.png
+*.json
