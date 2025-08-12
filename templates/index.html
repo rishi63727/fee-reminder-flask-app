@@ -1,86 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Fee Reminder System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fee Reminder System - Smart Payment Analytics</title>
+  <meta name="description" content="AI-powered fee reminder system for educational institutions" />
+
+  <!-- Fonts & Tailwind -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Optional custom overrides -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; }
+    .main-content { min-height: 100vh; background: #0b1020; color: #e5e7eb; padding: 2rem 1rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .app-card { background: #111827; border: 1px solid #1f2937; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); padding: 1.5rem; }
+    .app-header { text-align: center; margin-bottom: 1.25rem; }
+    .app-title { font-size: 1.75rem; font-weight: 700; color: #fff; }
+    .app-subtitle { color: #9ca3af; margin-top: 0.25rem; }
+    .stepper { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin: 1rem 0 1.25rem; }
+    .step { background: #0f172a; border: 1px dashed #1f2937; border-radius: 12px; padding: 0.75rem; text-align: center; }
+    .step.active { border-style: solid; border-color: #374151; background: #111827; }
+    .step-circle { width: 28px; height: 28px; line-height: 28px; font-weight: 700; background: #1f2937; border-radius: 999px; color: #cbd5e1; display: inline-block; margin-bottom: 0.25rem; }
+    .step-label { font-size: 0.85rem; color: #9ca3af; }
+
+    .drop-zone { border: 2px dashed #374151; border-radius: 14px; padding: 1rem; background: #0b1220; cursor: pointer; transition: .2s; }
+    .drop-zone:hover { border-color: #4b5563; background: #0f172a; }
+    .drop-zone-icon { width: 32px; height: 32px; color: #93c5fd; }
+    .drop-zone-text { font-weight: 600; margin-top: .35rem; }
+    .drop-zone-subtext { font-size: .85rem; color: #9ca3af; }
+
+    .file-display { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .5rem .75rem; border: 1px solid #1f2937; background: #0b1220; border-radius: 10px; margin-top: .75rem; }
+    .file-info { display: flex; align-items: center; gap: .5rem; color: #cbd5e1; }
+    .file-icon { width: 18px; height: 18px; color: #60a5fa; }
+    .remove-file-btn { color: #fca5a5; background: #1f2937; border-radius: 8px; padding: .25rem .5rem; }
+
+    .btn-group { display: flex; gap: .6rem; margin-top: 1rem; }
+    .btn { padding: .55rem .9rem; border-radius: 10px; font-weight: 600; border: 1px solid transparent; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:disabled { background: #374151; cursor: not-allowed; }
+    .btn-secondary { background: #0b1220; color: #e5e7eb; border-color: #374151; border-width: 1px; }
+    .btn-success { background: #16a34a; color: white; }
+
+    .results-prompt { color: #9ca3af; font-size: .92rem; margin-bottom: .5rem; }
+    .table-wrap { overflow-x: auto; border: 1px solid #1f2937; border-radius: 10px; background: #0b1220; }
+
+    .loading-overlay { position: fixed; inset: 0; background: rgba(2,6,23,.7); display: grid; place-items: center; z-index: 50; }
+    .loading-content { background: #0b1220; border: 1px solid #1f2937; padding: 1.25rem; border-radius: 12px; width: min(520px, 92vw); }
+    .loading-spinner { width: 30px; height: 30px; border-radius: 999px; border: 3px solid #374151; border-top-color: #60a5fa; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+    .progress-bar-container { background: #0b1020; border: 1px solid #1f2937; border-radius: 999px; height: 10px; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg,#60a5fa,#22d3ee); border-radius: 999px; transition: width .25s; }
+    .progress-text { font-size: .85rem; color: #cbd5e1; margin-top: .35rem; text-align: center; }
+
+    .health-pill { display:inline-block; margin-top:.5rem; font-size:.85rem; background:#0b1220; border:1px solid #1f2937; color:#93c5fd; padding:.25rem .5rem; border-radius:999px; }
+    .hidden { display: none !important; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
+  <div class="main-content">
     <div class="container">
-        <h1>Fee Reminder System</h1>
-        <p>Upload the student fees file to automate reminders.</p>
-        
-        <form id="upload-form">
-            <label for="file-upload" class="file-upload-label">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-                <span id="file-name">Choose an Excel file...</span>
-            </label>
-            <input id="file-upload" type="file" name="file" required accept=".xls,.xlsx">
+      <div class="app-card">
 
-            <div class="submit-container">
-                <button type="submit">Process & Send Reminders</button>
-                <div class="loader hidden"></div>
+        <!-- Header -->
+        <header class="app-header">
+          <h1 class="app-title">Fee Reminder System</h1>
+          <p class="app-subtitle">AI-powered payment analytics for educational institutions</p>
+          <div id="health" class="health-pill" aria-live="polite">Checking server…</div>
+        </header>
+
+        <!-- Progress Stepper -->
+        <div id="stepper" class="stepper">
+          <div class="step active">
+            <div class="step-circle">1</div>
+            <div class="step-label">Upload File</div>
+          </div>
+          <div class="step">
+            <div class="step-circle">2</div>
+            <div class="step-label">Analyze Data</div>
+          </div>
+          <div class="step">
+            <div class="step-circle">3</div>
+            <div class="step-label">Take Action</div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="error-container" class="hidden"></div>
+        <div id="success-container" class="hidden"></div>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+          <h2 class="section-title font-semibold text-slate-200 mb-2">Upload Student Fee Data</h2>
+
+          <form id="upload-form" enctype="multipart/form-data">
+            <!-- Drop Zone -->
+            <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Click to upload file">
+              <div class="flex items-center gap-3">
+                <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <div>
+                  <div class="drop-zone-text drop-zone-prompt">Drop your Excel file here or click to browse</div>
+                  <div class="drop-zone-subtext">Supports .xlsx and .xls files up to 16MB</div>
+                  <div id="file-size" class="text-xs text-slate-400 mt-1"></div>
+                </div>
+              </div>
+
+              <!-- Selected File Display -->
+              <div id="file-display" class="file-display hidden">
+                <div class="file-info">
+                  <svg class="file-icon" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                  </svg>
+                  <span id="file-name"></span>
+                </div>
+                <button type="button" id="remove-file" class="remove-file-btn" aria-label="Remove file">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
-        </form>
 
-        <div id="message"></div>
+            <!-- Hidden File Input (controlled by JS) -->
+            <input type="file" id="file-upload" name="file" accept=".xlsx,.xls" class="hidden" aria-label="File upload input"/>
+
+            <!-- Submit -->
+            <div class="btn-group">
+              <button type="submit" id="submit-btn" class="btn btn-primary" disabled>
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" class="inline-block mr-1 align-[-2px]" aria-hidden="true">
+                  <path d="M9,10V12H7V10H9M13,10V12H11V10H13M17,10V12H15V10H17M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5C3.89,21 3,20.1 3,19V5A2,2 0 0,1 5,3H6V1H8V3H16V1H18V3H19M19,19V8H5V19H19M5,6H19V5H5V6Z"/>
+                </svg>
+                Process File
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section mt-6">
+          <h2 class="section-title font-semibold text-slate-200 mb-2">Analysis Results</h2>
+          <div class="results-prompt">Upload a file to see analysis results here</div>
+          <div id="results" class="table-wrap"></div>
+
+          <!-- Action Buttons -->
+          <div id="action-buttons" class="btn-group mt-3 hidden">
+            <button id="export-btn" class="btn btn-secondary" disabled>
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" class="inline-block mr-1 align-[-2px]" aria-hidden="true">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+              </svg>
+              Export Results
+            </button>
+            <button id="email-btn" class="btn btn-success" disabled>
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" class="inline-block mr-1 align-[-2px]" aria-hidden="true">
+                <path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/>
+              </svg>
+              Send Reminders
+            </button>
+          </div>
+        </section>
+
+      </div>
     </div>
+  </div>
 
-    <script>
-        const form = document.getElementById("upload-form");
-        const fileInput = document.getElementById("file-upload");
-        const fileNameSpan = document.getElementById("file-name");
-        const messageDiv = document.getElementById("message");
-        const submitButton = form.querySelector("button");
-        const loader = form.querySelector(".loader");
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden" aria-live="polite" aria-busy="true">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <h3 class="text-lg font-semibold mb-3 text-slate-200">Processing Your File</h3>
+      <div class="progress-container">
+        <div class="progress-bar-container">
+          <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <div id="progress-text" class="progress-text">Initializing...</div>
+      </div>
+    </div>
+  </div>
 
-        // Display the selected file name
-        fileInput.addEventListener("change", () => {
-            if (fileInput.files.length > 0) {
-                fileNameSpan.textContent = fileInput.files[0].name;
-            } else {
-                fileNameSpan.textContent = "Choose an Excel file...";
-            }
-        });
-
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            // Clear previous message and show loader
-            messageDiv.innerHTML = "";
-            messageDiv.className = ""; // Reset classes
-            submitButton.classList.add("hidden");
-            loader.classList.remove("hidden");
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            try {
-                const response = await fetch("/upload", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                const text = await response.text();
-                messageDiv.innerHTML = text;
-
-                // Apply success or error styles
-                if (response.ok) {
-                    messageDiv.classList.add("message-success");
-                } else {
-                    messageDiv.classList.add("message-error");
-                }
-            } catch (error) {
-                messageDiv.innerHTML = "An unexpected error occurred. Please check the console.";
-                messageDiv.classList.add("message-error");
-                console.error("Fetch Error:", error);
-            } finally {
-                // Hide loader and show button again
-                loader.classList.add("hidden");
-                submitButton.classList.remove("hidden");
-            }
-        });
-    </script>
+  <!-- Script -->
+  <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sent Mail Log</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .mail-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .mail-card h3 { margin-top: 0; }
+        .mail-card pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">&larr; Back to Uploader</a>
+        <h1>📧 Sent Mail Log</h1>
+
+        {% if emails %}
+            {% for email in emails %}
+                <div class="mail-card">
+                    <h3>Subject: {{ email.subject }}</h3>
+                    <p><strong>To:</strong> {{ email.recipient }}</p>
+                    <p><strong>Time:</strong> {{ email.timestamp }}</p>
+                    <h4>Content:</h4>
+                    <pre>{{ email.body }}</pre>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No emails were sent in the last run.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
